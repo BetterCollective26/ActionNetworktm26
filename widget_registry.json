@@ -9,5 +9,16 @@
     "created_at_utc": "2026-03-03 11:43:54 UTC",
     "bundle_path": "bundles/foxborough_major_ma_cities.html.json",
     "has_bundle": true
+  },
+  "foxborough_mid-sized_ma_cities.html": {
+    "brand": "Action Network",
+    "table_title": "How Foxborough’s $7.8M Burden Compares With Mid-Sized Massachusetts Cities",
+    "file": "foxborough_mid-sized_ma_cities.html",
+    "pages_url": "https://bettercollective26.github.io/ActionNetworktm26/foxborough_mid-sized_ma_cities.html",
+    "github_repo_url": "https://github.com/bettercollective26/ActionNetworktm26",
+    "created_by": "gauthambc",
+    "created_at_utc": "2026-03-03 11:48:07 UTC",
+    "bundle_path": "bundles/foxborough_mid-sized_ma_cities.html.json",
+    "has_bundle": true
   }
 }
