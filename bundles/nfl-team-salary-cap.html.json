@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "widget_file_name": "nfl-team-salary-cap.html",
+  "brand": "Action Network",
+  "created_by": "gauthambc",
+  "created_at_utc": "2026-03-09 22:36:11 UTC",
+  "table_name_words": "nfl team salary cap",
+  "widget_title": "All calculations are based on each NFL team\u2019s adjusted 2026 salary cap.",
+  "widget_subtitle": "",
+  "config": {
+    "brand": "Action Network",
+    "title": "All calculations are based on each NFL team\u2019s adjusted 2026 salary cap.",
+    "title_style": "Keep original",
+    "subtitle": "",
+    "subtitle_style": "Keep original",
+    "striped": true,
+    "show_header": true,
+    "center_titles": false,
+    "branded_title_color": true,
+    "show_footer": true,
+    "footer_logo_align": "Left",
+    "footer_logo_h": 46,
+    "show_footer_notes": true,
+    "footer_notes": "**Note:** Household income uses each team city\u2019s median annual income; adjusted cap means the team\u2019s 2026 cap after carryover and other adjustments.",
+    "show_heat_scale": false,
+    "cell_align": "Center",
+    "show_search": true,
+    "show_pager": true,
+    "show_embed": true,
+    "show_page_numbers": true,
+    "bar_columns": [
+      "Households needed to match the cap"
+    ],
+    "bar_max_overrides": {},
+    "bar_fixed_w": 200,
+    "heat_columns": [],
+    "heat_overrides": {},
+    "heat_strength": 0.55,
+    "heatmap_style": "Branded heatmap",
+    "header_style": "Keep original",
+    "col_header_overrides": {}
+  },
+  "col_format_rules": {},
+  "csv": "Rank,Team,City,Number of households,Household income (annual),Adjusted team salary cap,Households needed to match the cap,Cap amount per household \n1,Detroit Lions,\"Detroit, MI\",\"268,048\",\"$39,209\",\"$320,867,742\",\"8,184\",\"$1,197\"\n2,Cleveland Browns,\"Cleveland, OH\",\"171,450\",\"$43,383\",\"$326,054,046\",\"7,516\",\"$1,902\"\n3,Buffalo Bills,\"Buffalo, NY\",\"119,620\",\"$52,211\",\"$299,931,788\",\"5,745\",\"$2,507\"\n4,Cincinnati Bengals,\"Cincinnati, OH\",\"145,964\",\"$56,910\",\"$309,966,110\",\"5,447\",\"$2,124\"\n5,New Orleans Saints,\"New Orleans, LA\",\"157,535\",\"$58,821\",\"$316,513,022\",\"5,381\",\"$2,009\"\n6,Philadelphia Eagles,\"Philadelphia, PA\",\"702,646\",\"$60,521\",\"$312,899,036\",\"5,170\",$445\n7,Houston Texans,\"Houston, TX\",\"943,336\",\"$64,361\",\"$308,706,364\",\"4,796\",$327\n8,Baltimore Ravens,\"Baltimore, MD\",\"265,998\",\"$64,778\",\"$310,581,060\",\"4,795\",\"$1,168\"\n9,Pittsburgh Steelers,\"Pittsburgh, PA\",\"142,997\",\"$66,954\",\"$316,657,506\",\"4,729\",\"$2,214\"\n10,Green Bay Packers,\"Green Bay, WI\",\"41,209\",\"$65,820\",\"$309,395,220\",\"4,701\",\"$7,508\"\n11,Miami Dolphins,\"Miami, FL\",\"202,757\",\"$66,337\",\"$307,539,747\",\"4,636\",\"$1,517\"\n12,Indianapolis Colts,\"Indianapolis, IN\",\"370,768\",\"$66,900\",\"$302,846,430\",\"4,527\",$817\n13,Dallas Cowboys,\"Dallas, TX\",\"537,317\",\"$74,323\",\"$326,048,087\",\"4,387\",$607\n14,Kansas City Chiefs,\"Kansas City, MO\",\"222,248\",\"$69,958\",\"$300,603,216\",\"4,297\",\"$1,353\"\n15,Jacksonville Jaguars,\"Jacksonville, FL\",\"413,620\",\"$72,389\",\"$307,761,839\",\"4,252\",$744\n16,Tennessee Titans,\"Nashville, TN\",\"331,090\",\"$80,090\",\"$322,816,828\",\"4,031\",$975\n17,Minnesota Vikings,\"Minneapolis, MN\",\"194,480\",\"$77,732\",\"$312,347,073\",\"4,018\",\"$1,606\"\n18,Las Vegas Raiders,\"Las Vegas, NV\",\"253,523\",\"$78,556\",\"$312,469,345\",\"3,978\",\"$1,233\"\n19,New York Jets,\"New York, NY\",\"3,379,651\",\"$81,228\",\"$322,634,600\",\"3,972\",$95\n20,Chicago Bears,\"Chicago, IL\",\"1,172,455\",\"$80,613\",\"$308,939,508\",\"3,832\",$263\n21,Los Angeles Rams,\"Los Angeles, CA\",\"1,480,869\",\"$82,263\",\"$310,193,891\",\"3,771\",$209\n22,Tampa Bay Buccaneers,\"Tampa, FL\",\"176,004\",\"$84,114\",\"$313,557,174\",\"3,728\",\"$1,782\"\n23,Arizona Cardinals,\"Phoenix, AZ\",\"631,270\",\"$85,246\",\"$314,854,485\",\"3,693\",$499\n24,Los Angeles Chargers,\"Los Angeles, CA\",\"1,480,869\",\"$82,263\",\"$303,090,285\",\"3,684\",$205\n25,New York Giants,\"New York, NY\",\"3,379,651\",\"$81,228\",\"$298,774,916\",\"3,678\",$88\n26,Carolina Panthers,\"Charlotte, NC\",\"381,274\",\"$86,416\",\"$311,318,471\",\"3,603\",$817\n27,New England Patriots,\"Boston, MA\",\"294,977\",\"$97,791\",\"$350,532,276\",\"3,585\",\"$1,188\"\n28,Atlanta Falcons,\"Atlanta, GA\",\"244,482\",\"$88,165\",\"$304,174,317\",\"3,450\",\"$1,244\"\n29,Denver Broncos,\"Denver, CO\",\"349,785\",\"$92,504\",\"$303,202,847\",\"3,278\",$867\n30,Washington Commanders,\"Washington, DC\",\"329,687\",\"$109,707\",\"$327,817,537\",\"2,988\",$994\n31,Seattle Seahawks,\"Seattle, WA\",\"383,698\",\"$118,745\",\"$312,405,006\",\"2,631\",$814\n32,San Francisco 49ers,\"San Francisco, CA\",\"371,841\",\"$139,801\",\"$330,556,340\",\"2,364\",$889\n",
+  "hidden_cols": [],
+  "bar_columns": [
+    "Households needed to match the cap"
+  ],
+  "bar_max_overrides": {},
+  "heat_columns": [],
+  "heat_overrides": {}
+}
