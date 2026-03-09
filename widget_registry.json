@@ -42,5 +42,16 @@
     "created_at_utc": "2026-03-09 22:18:29 UTC",
     "bundle_path": "bundles/nfl-base-salary-cap.html.json",
     "has_bundle": true
+  },
+  "nfl-team-salary-cap.html": {
+    "brand": "Action Network",
+    "table_title": "All calculations are based on each NFL team’s adjusted 2026 salary cap.",
+    "file": "nfl-team-salary-cap.html",
+    "pages_url": "https://bettercollective26.github.io/ActionNetworktm26/nfl-team-salary-cap.html",
+    "github_repo_url": "https://github.com/bettercollective26/ActionNetworktm26",
+    "created_by": "gauthambc",
+    "created_at_utc": "2026-03-09 22:36:11 UTC",
+    "bundle_path": "bundles/nfl-team-salary-cap.html.json",
+    "has_bundle": true
   }
 }
