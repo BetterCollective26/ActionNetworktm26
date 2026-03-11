@@ -53,5 +53,16 @@
     "created_at_utc": "2026-03-09 22:36:11 UTC",
     "bundle_path": "bundles/nfl-team-salary-cap.html.json",
     "has_bundle": true
+  },
+  "meghan-markle-odss.html": {
+    "brand": "Action Network",
+    "table_title": "Action Network: Meghan Markle specials",
+    "file": "meghan-markle-odss.html",
+    "pages_url": "https://bettercollective26.github.io/ActionNetworktm26/meghan-markle-odss.html",
+    "github_repo_url": "https://github.com/bettercollective26/ActionNetworktm26",
+    "created_by": "gauthambc",
+    "created_at_utc": "2026-03-11 11:50:41 UTC",
+    "bundle_path": "bundles/meghan-markle-odss.html.json",
+    "has_bundle": true
   }
 }
