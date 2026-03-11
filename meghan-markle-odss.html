@@ -823,7 +823,8 @@
 Odds </th>
               <th scope="col" data-type="num" class="">American 
 Odds </th>
-              <th scope="col" data-type="text" class="">Implied 
+              <th scope="col" data-type="num" class="">Implied 
+
 Probability </th>
             </tr>
           </thead>
@@ -861,614 +862,703 @@ Probability </th>
   </div>
 
   <script>
-  (function(){
-    const root = document.getElementById('bt-block');
-    if (!root || root.dataset.dwInit === '1') return;
-    root.dataset.dwInit='1';
+(function(){
+  const root = document.getElementById('bt-block');
+  if (!root || root.dataset.dwInit === '1') return;
+  root.dataset.dwInit='1';
 
-    const table = root.querySelector('table.dw-table');
-    const tb = table ? table.tBodies[0] : null;
-    const ALL_ROWS = tb ? Array.from(tb.rows).filter(r => !r.classList.contains('dw-empty')) : [];
-    const PREVIEW_LIMIT = ALL_ROWS.length;     // full table
-    const PREVIEW_ROWS = ALL_ROWS;             // full table
-    ALL_ROWS.forEach((r, i) => { r.dataset.idx = String(i); });
-    const scroller = root.querySelector('.dw-scroll');
-    const controls = root.querySelector('.dw-controls');
-    if(!table || !tb || !scroller || !controls) return;
+  const table = root.querySelector('table.dw-table');
+  const tb = table ? table.tBodies[0] : null;
+  const ALL_ROWS = tb ? Array.from(tb.rows).filter(r => !r.classList.contains('dw-empty')) : [];
+  const PREVIEW_LIMIT = ALL_ROWS.length;
+  const PREVIEW_ROWS = ALL_ROWS;
+  ALL_ROWS.forEach((r, i) => { r.dataset.idx = String(i); });
 
-    const controlsHidden = controls.classList.contains('vi-hide');
+  const scroller = root.querySelector('.dw-scroll');
+  const controls = root.querySelector('.dw-controls');
+  if(!table || !tb || !scroller || !controls) return;
 
-    const searchFieldWrap = controls.querySelector('.dw-field');
-    const searchInput = controls.querySelector('.dw-input');
-    const clearBtn = controls.querySelector('.dw-clear');
+  const controlsHidden = controls.classList.contains('vi-hide');
 
-    const pagerWrap = controls.querySelector('.dw-pager');
-    const sizeSel = pagerWrap ? pagerWrap.querySelector('#bt-size') : null;
-    const prevBtn = pagerWrap ? pagerWrap.querySelector('[data-page="prev"]') : null;
-    const nextBtn = pagerWrap ? pagerWrap.querySelector('[data-page="next"]') : null;
+  const searchFieldWrap = controls.querySelector('.dw-field');
+  const searchInput = controls.querySelector('.dw-input');
+  const clearBtn = controls.querySelector('.dw-clear');
 
-    const embedWrap = controls.querySelector('.dw-embed');
-    const downloadBtn = embedWrap ? embedWrap.querySelector('#dw-download-png') : null;
-    const menu = embedWrap ? embedWrap.querySelector('#dw-download-menu') : null;
-    const btnTop10 = embedWrap ? embedWrap.querySelector('#dw-dl-top10') : null;
-    const btnBottom10 = embedWrap ? embedWrap.querySelector('#dw-dl-bottom10') : null;
-    const btnCsv = embedWrap ? embedWrap.querySelector('#dw-dl-csv') : null;
-    const btnEmbed = embedWrap ? embedWrap.querySelector('#dw-embed-script') : null;
-    
-    // current-view buttons
-    const btnCsvCurrent = embedWrap ? embedWrap.querySelector('#dw-dl-csv-current') : null;
-    const btnImgCurrent = embedWrap ? embedWrap.querySelector('#dw-dl-image-current') : null;
-    const btnHtmlCurrent = embedWrap ? embedWrap.querySelector('#dw-copy-html-current') : null;
-    
-    const menuTitle = embedWrap ? embedWrap.querySelector('#dw-menu-title') : null;
-    window.__viMenuTitleEl = menuTitle;
+  const pagerWrap = controls.querySelector('.dw-pager');
+  const sizeSel = pagerWrap ? pagerWrap.querySelector('#bt-size') : null;
+  const prevBtn = pagerWrap ? pagerWrap.querySelector('[data-page="prev"]') : null;
+  const nextBtn = pagerWrap ? pagerWrap.querySelector('[data-page="next"]') : null;
 
-    const emptyRow = tb.querySelector('.dw-empty');
-    const pageStatus = document.getElementById('dw-page-status-text');
+  const embedWrap = controls.querySelector('.dw-embed');
+  const downloadBtn = embedWrap ? embedWrap.querySelector('#dw-download-png') : null;
+  const menu = embedWrap ? embedWrap.querySelector('#dw-download-menu') : null;
+  const btnTop10 = embedWrap ? embedWrap.querySelector('#dw-dl-top10') : null;
+  const btnBottom10 = embedWrap ? embedWrap.querySelector('#dw-dl-bottom10') : null;
+  const btnCsv = embedWrap ? embedWrap.querySelector('#dw-dl-csv') : null;
+  const btnEmbed = embedWrap ? embedWrap.querySelector('#dw-embed-script') : null;
 
-    const hasSearch = !controlsHidden
-      && !!searchFieldWrap && !searchFieldWrap.classList.contains('vi-hide')
-      && !!searchInput && !!clearBtn;
+  const btnCsvCurrent = embedWrap ? embedWrap.querySelector('#dw-dl-csv-current') : null;
+  const btnImgCurrent = embedWrap ? embedWrap.querySelector('#dw-dl-image-current') : null;
+  const btnHtmlCurrent = embedWrap ? embedWrap.querySelector('#dw-copy-html-current') : null;
 
-    const hasPager = !controlsHidden
-      && !!pagerWrap && !pagerWrap.classList.contains('vi-hide')
-      && !!sizeSel && !!prevBtn && !!nextBtn;
+  const menuTitle = embedWrap ? embedWrap.querySelector('#dw-menu-title') : null;
+  window.__viMenuTitleEl = menuTitle;
 
-    const hasEmbed = !controlsHidden
-      && !!embedWrap && !embedWrap.classList.contains('vi-hide')
-      && !!downloadBtn && !!menu;
+  const emptyRow = tb.querySelector('.dw-empty');
+  const pageStatus = document.getElementById('dw-page-status-text');
 
-    let pageSize = hasPager ? (parseInt(sizeSel.value,10) || 10) : 0;
-    let page = 1;
-    let filter = '';
-    filter = (searchInput?.value || '').toLowerCase().trim();
+  const hasSearch = !controlsHidden
+    && !!searchFieldWrap && !searchFieldWrap.classList.contains('vi-hide')
+    && !!searchInput && !!clearBtn;
 
-    function isFilterActive(){
-      const typed = (searchInput && typeof searchInput.value === 'string')
-        ? searchInput.value.trim()
-        : '';
-      const live = (filter || '').trim();
-      return typed.length > 0 || live.length > 0;
+  const hasPager = !controlsHidden
+    && !!pagerWrap && !pagerWrap.classList.contains('vi-hide')
+    && !!sizeSel && !!prevBtn && !!nextBtn;
+
+  const hasEmbed = !controlsHidden
+    && !!embedWrap && !embedWrap.classList.contains('vi-hide')
+    && !!downloadBtn && !!menu;
+
+  let pageSize = hasPager ? (parseInt(sizeSel.value,10) || 10) : 0;
+  let page = 1;
+  let filter = '';
+  filter = (searchInput?.value || '').toLowerCase().trim();
+
+  const heads = Array.from(table.tHead.rows[0].cells);
+
+  function normalizeHeaderText(s){
+    return String(s || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  }
+
+  function findColIndexByHeader(label){
+    const target = normalizeHeaderText(label);
+    return heads.findIndex(th => normalizeHeaderText(th.textContent) === target);
+  }
+
+  const americanOddsColIdx = findColIndexByHeader('American Odds');
+  const impliedProbColIdx = findColIndexByHeader('Implied Probability');
+
+  function formatAmericanOddsValue(raw){
+    const num = parseFloat(String(raw).replace(/[^0-9.\-]/g,''));
+    if (!Number.isFinite(num)) return String(raw || '').trim();
+    if (num > 0) return `+${Math.round(num)}`;
+    if (num < 0) return `${Math.round(num)}`;
+    return '0';
+  }
+
+  function parsePercentValue(raw){
+    const num = parseFloat(String(raw).replace(/[^0-9.\-]/g,''));
+    return Number.isFinite(num) ? num : null;
+  }
+
+  function createProbabilityBarCell(value){
+    const safeVal = Math.max(0, Math.min(100, value));
+    const display = safeVal.toFixed(2) + '%';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'dw-bar-wrap';
+    wrap.style.width = '200px';
+
+    const track = document.createElement('div');
+    track.className = 'dw-bar-track';
+
+    const fill = document.createElement('div');
+    fill.className = 'dw-bar-fill';
+    fill.style.width = safeVal + '%';
+
+    const text = document.createElement('div');
+    text.className = 'dw-bar-text';
+
+    const pill = document.createElement('span');
+    pill.className = 'dw-bar-pill';
+    pill.textContent = safeVal.toFixed(2);
+
+    text.appendChild(pill);
+    track.appendChild(fill);
+    track.appendChild(text);
+    wrap.appendChild(track);
+
+    return { wrap, display };
+  }
+
+  function applyOddsFormatting(){
+    if (americanOddsColIdx > -1) {
+      ALL_ROWS.forEach(tr => {
+        const td = tr.children[americanOddsColIdx];
+        if (!td) return;
+
+        const cell = td.querySelector('.dw-cell') || td;
+        const original = (td.dataset.rawAmericanOdds || cell.textContent || '').trim();
+        td.dataset.rawAmericanOdds = original;
+
+        const formatted = formatAmericanOddsValue(original);
+        cell.textContent = formatted;
+        cell.title = formatted;
+        td.dataset.sortValue = parseFloat(String(original).replace(/[^0-9.\-]/g,'')) || 0;
+      });
     }
 
-    
-    function syncMenuOptions(){
-      const filtered = isFilterActive();
-    
-      // Full-table options
-      if (btnTop10)   btnTop10.classList.toggle('vi-hide', filtered);
-      if (btnBottom10) btnBottom10.classList.toggle('vi-hide', filtered);
-      if (btnCsv)     btnCsv.classList.toggle('vi-hide', filtered);
-      if (btnEmbed)   btnEmbed.classList.toggle('vi-hide', filtered);
-    
-      // Current-view options
-      if (btnCsvCurrent)  btnCsvCurrent.classList.toggle('vi-hide', !filtered);
-      if (btnImgCurrent)  btnImgCurrent.classList.toggle('vi-hide', !filtered);
-      if (btnHtmlCurrent) btnHtmlCurrent.classList.toggle('vi-hide', !filtered);
-    
-      // Optional title clarity
-      if (menuTitle){
-        menuTitle.textContent = filtered ? 'Current view actions' : 'Choose action';
-      }
+    if (impliedProbColIdx > -1) {
+      const header = heads[impliedProbColIdx];
+      if (header) header.classList.add('dw-bar-col');
+
+      ALL_ROWS.forEach(tr => {
+        const td = tr.children[impliedProbColIdx];
+        if (!td) return;
+
+        td.classList.add('dw-bar-td');
+
+        const cell = td.querySelector('.dw-cell') || td;
+        const original = (td.dataset.rawImpliedProb || cell.textContent || '').trim();
+        td.dataset.rawImpliedProb = original;
+
+        const value = parsePercentValue(original);
+        if (value === null) return;
+
+        td.dataset.sortValue = value;
+        td.setAttribute('title', value.toFixed(2) + '%');
+
+        const { wrap } = createProbabilityBarCell(value);
+
+        td.innerHTML = '';
+        td.appendChild(wrap);
+      });
     }
+  }
 
+  applyOddsFormatting();
 
-    const onScrollShadow = ()=> scroller.classList.toggle('scrolled', scroller.scrollTop > 0);
-    scroller.addEventListener('scroll', onScrollShadow); onScrollShadow();
+  function isFilterActive(){
+    const typed = (searchInput && typeof searchInput.value === 'string')
+      ? searchInput.value.trim()
+      : '';
+    const live = (filter || '').trim();
+    return typed.length > 0 || live.length > 0;
+  }
 
-    const heads = Array.from(table.tHead.rows[0].cells);
-    // Wrap header text in span for safe 3-line clamp (without breaking table layout)
-    heads.forEach((th) => {
-      if (th.querySelector('.dw-th-label')) return;
-    
-      const txt = (th.textContent || '').trim();
-      th.textContent = '';
-    
-      const span = document.createElement('span');
-      span.className = 'dw-th-label';
-      span.textContent = txt;
-      th.appendChild(span);
-    });
-    heads.forEach((th,i)=>{
-      th.classList.add('sortable'); th.setAttribute('aria-sort','none'); th.dataset.sort='none'; th.tabIndex=0;
-      const type = th.dataset.type || 'text';
-      const go = ()=> sortBy(i,type,th);
-      th.addEventListener('click',go);
-      th.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
-    });
+  function syncMenuOptions(){
+    const filtered = isFilterActive();
 
-    function textOf(tr,i){ return (tr.children[i].innerText||'').trim(); }
+    if (btnTop10) btnTop10.classList.toggle('vi-hide', filtered);
+    if (btnBottom10) btnBottom10.classList.toggle('vi-hide', filtered);
+    if (btnCsv) btnCsv.classList.toggle('vi-hide', filtered);
+    if (btnEmbed) btnEmbed.classList.toggle('vi-hide', filtered);
 
-    function sortBy(colIdx, type, th){
-      // ✅ sort against FULL dataset (not current page only)
-      const rows = ALL_ROWS.slice();
-    
-      const current = th.dataset.sort || 'none';
-      const next = current === 'none' ? 'asc' : current === 'asc' ? 'desc' : 'none';
-    
-      heads.forEach(h=>{
-        h.dataset.sort = 'none';
-        h.setAttribute('aria-sort','none');
-        h.classList.remove('is-sorted');
-      });
-    
-      // reset to original order
-      if(next === 'none'){
-        rows.sort((a,b)=>(+a.dataset.idx)-(+b.dataset.idx));
-        rows.forEach(r=>tb.insertBefore(r, emptyRow));
-        page = 1;
-        renderPage();
-        return;
+    if (btnCsvCurrent) btnCsvCurrent.classList.toggle('vi-hide', !filtered);
+    if (btnImgCurrent) btnImgCurrent.classList.toggle('vi-hide', !filtered);
+    if (btnHtmlCurrent) btnHtmlCurrent.classList.toggle('vi-hide', !filtered);
+
+    if (menuTitle){
+      menuTitle.textContent = filtered ? 'Current view actions' : 'Choose action';
+    }
+  }
+
+  const onScrollShadow = ()=> scroller.classList.toggle('scrolled', scroller.scrollTop > 0);
+  scroller.addEventListener('scroll', onScrollShadow);
+  onScrollShadow();
+
+  heads.forEach((th) => {
+    if (th.querySelector('.dw-th-label')) return;
+
+    const txt = (th.textContent || '').trim();
+    th.textContent = '';
+
+    const span = document.createElement('span');
+    span.className = 'dw-th-label';
+    span.textContent = txt;
+    th.appendChild(span);
+  });
+
+  if (impliedProbColIdx > -1) {
+    heads[impliedProbColIdx].dataset.type = 'num';
+  }
+
+  heads.forEach((th,i)=>{
+    th.classList.add('sortable');
+    th.setAttribute('aria-sort','none');
+    th.dataset.sort='none';
+    th.tabIndex=0;
+
+    const type = th.dataset.type || 'text';
+    const go = ()=> sortBy(i,type,th);
+
+    th.addEventListener('click',go);
+    th.addEventListener('keydown',e=>{
+      if(e.key==='Enter'||e.key===' '){
+        e.preventDefault();
+        go();
       }
-    
-      th.dataset.sort = next;
-      th.setAttribute('aria-sort', next === 'asc' ? 'ascending' : 'descending');
-      th.classList.add('is-sorted');
-    
-      const mul = next === 'asc' ? 1 : -1;
-    
-      rows.sort((a,b)=>{
-        let v1 = textOf(a,colIdx);
-        let v2 = textOf(b,colIdx);
-    
-        // force numeric on rank-like columns too
-        const isNum = (type || 'text') === 'num';
-    
-        if(isNum){
-          v1 = parseFloat(String(v1).replace(/[^0-9.\-]/g,''));
-          v2 = parseFloat(String(v2).replace(/[^0-9.\-]/g,''));
-          if(Number.isNaN(v1)) v1 = -Infinity;
-          if(Number.isNaN(v2)) v2 = -Infinity;
-        }else{
-          v1 = String(v1).toLowerCase();
-          v2 = String(v2).toLowerCase();
-        }
-    
-        if(v1 > v2) return 1 * mul;
-        if(v1 < v2) return -1 * mul;
-        return 0;
-      });
-    
-      // write sorted order back to tbody
+    });
+  });
+
+  function textOf(tr,i){
+    const cell = tr.children[i];
+    if (!cell) return '';
+    if (cell.dataset && cell.dataset.sortValue != null) return String(cell.dataset.sortValue);
+    return (cell.innerText || '').trim();
+  }
+
+  function sortBy(colIdx, type, th){
+    const rows = ALL_ROWS.slice();
+
+    const current = th.dataset.sort || 'none';
+    const next = current === 'none' ? 'asc' : current === 'asc' ? 'desc' : 'none';
+
+    heads.forEach(h=>{
+      h.dataset.sort = 'none';
+      h.setAttribute('aria-sort','none');
+      h.classList.remove('is-sorted');
+    });
+
+    if(next === 'none'){
+      rows.sort((a,b)=>(+a.dataset.idx)-(+b.dataset.idx));
       rows.forEach(r=>tb.insertBefore(r, emptyRow));
-    
-      // ✅ always go to page 1 after sort
       page = 1;
       renderPage();
+      return;
     }
 
-    function matchesFilter(tr){
-      if(tr.classList.contains('dw-empty')) return false;
-      if(!filter) return true;
-      return tr.innerText.toLowerCase().includes(filter);
-    }
+    th.dataset.sort = next;
+    th.setAttribute('aria-sort', next === 'asc' ? 'ascending' : 'descending');
+    th.classList.add('is-sorted');
 
-    function setPageStatus(totalVisible, pages){
-      if(!pageStatus) return;
-      if(totalVisible === 0){ pageStatus.textContent = ""; return; }
-      if(!hasPager || pageSize === 0){ pageStatus.textContent = ""; return; }
-      pageStatus.textContent = "Page " + page + " Of " + pages;
-    }
+    const mul = next === 'asc' ? 1 : -1;
 
-    function applyVisibleZebra() {
-      const rows = Array.from(tb.rows)
-        .filter(tr => !tr.classList.contains('dw-empty') && tr.style.display !== 'none');
-    
-      rows.forEach((tr, i) => {
-        tr.classList.remove('dw-zebra-even', 'dw-zebra-odd');
-        tr.classList.add(i % 2 === 0 ? 'dw-zebra-odd' : 'dw-zebra-even');
-      });
-    }
+    rows.sort((a,b)=>{
+      let v1 = textOf(a,colIdx);
+      let v2 = textOf(b,colIdx);
 
-    function renderPage(){
-      // Always operate on CURRENT DOM order (after sortBy re-inserts rows)
-      const ordered = Array.from(tb.rows).filter(r => !r.classList.contains('dw-empty'));
-      const visible = ordered.filter(matchesFilter);
-      const total = visible.length;
-    
-      // hide all real rows first
-      ALL_ROWS.forEach(r => { r.style.display = 'none'; });
-    
-      let shown = [];
-      if (total === 0){
-        if (emptyRow){
-          emptyRow.style.display = 'table-row';
-          if (emptyRow.firstElementChild) emptyRow.firstElementChild.colSpan = heads.length;
-        }
-        if (hasPager){
-          prevBtn.disabled = true;
-          nextBtn.disabled = true;
-        }
-        setPageStatus(0, 0);
-        applyVisibleZebra();
-        syncMenuOptions();
-        return;
+      const isNum = (type || 'text') === 'num';
+
+      if(isNum){
+        v1 = parseFloat(String(v1).replace(/[^0-9.\-]/g,''));
+        v2 = parseFloat(String(v2).replace(/[^0-9.\-]/g,''));
+        if(Number.isNaN(v1)) v1 = -Infinity;
+        if(Number.isNaN(v2)) v2 = -Infinity;
+      }else{
+        v1 = String(v1).toLowerCase();
+        v2 = String(v2).toLowerCase();
       }
-    
-      if (emptyRow) emptyRow.style.display = 'none';
-    
-      if (!hasPager || pageSize === 0){
-        // show all filtered rows
-        shown = visible;
-        shown.forEach(r => { r.style.display = 'table-row'; });
-        if (hasPager){
-          prevBtn.disabled = true;
-          nextBtn.disabled = true;
-        }
-        setPageStatus(total, 1);
-      } else {
-        const pages = Math.max(1, Math.ceil(total / pageSize));
-        if (page > pages) page = pages;
-        if (page < 1) page = 1;
-    
-        const start = (page - 1) * pageSize;
-        const end = start + pageSize;
-        shown = visible.slice(start, end);
-    
-        shown.forEach(r => { r.style.display = 'table-row'; });
-    
-        prevBtn.disabled = page <= 1;
-        nextBtn.disabled = page >= pages;
-        setPageStatus(total, pages);
-      }
-    
-      applyVisibleZebra();
-      syncMenuOptions();
-    }
 
-    if(hasSearch){
-      const syncClearBtn = ()=> searchFieldWrap.classList.toggle('has-value', !!searchInput.value);
-      let t=null;
-    
-      searchInput.addEventListener('input', e=>{
-        syncClearBtn();
-        clearTimeout(t);
-        t=setTimeout(()=>{
-          filter=(e.target.value||'').toLowerCase().trim();
-          page=1;
-          renderPage();
-          syncMenuOptions();
-        },120);
-      });
-    
-      clearBtn.addEventListener('click', ()=>{
-        searchInput.value='';
-        syncClearBtn();
-        filter='';
-        page=1;
-        renderPage();
-        syncMenuOptions();
-        searchInput.focus();
-      });
-    } 
-
-    if(hasPager){
-      sizeSel.addEventListener('change', e=>{
-        pageSize = parseInt(e.target.value,10) || 0;
-        page=1;
-        renderPage();
-      });
-      prevBtn.addEventListener('click', ()=>{ page--; renderPage(); });
-      nextBtn.addEventListener('click', ()=>{ page++; renderPage(); });
-    }
-
-    function hideMenu(){ if(menu) menu.classList.add('vi-hide'); }
-    function toggleMenu(){ if(menu) menu.classList.toggle('vi-hide'); }
-
-    document.addEventListener('click', (e)=>{
-      if(!menu || menu.classList.contains('vi-hide')) return;
-      const inMenu = menu.contains(e.target);
-      const inBtn = downloadBtn && downloadBtn.contains(e.target);
-      if(!inMenu && !inBtn) hideMenu();
+      if(v1 > v2) return 1 * mul;
+      if(v1 < v2) return -1 * mul;
+      return 0;
     });
 
-    if(hasEmbed && downloadBtn){
-      downloadBtn.addEventListener('click', (e)=>{
-        e.preventDefault();
-        e.stopPropagation();
-        toggleMenu();
+    rows.forEach(r=>tb.insertBefore(r, emptyRow));
+    page = 1;
+    renderPage();
+  }
+
+  function matchesFilter(tr){
+    if(tr.classList.contains('dw-empty')) return false;
+    if(!filter) return true;
+    return tr.innerText.toLowerCase().includes(filter);
+  }
+
+  function setPageStatus(totalVisible, pages){
+    if(!pageStatus) return;
+    if(totalVisible === 0){ pageStatus.textContent = ""; return; }
+    if(!hasPager || pageSize === 0){ pageStatus.textContent = ""; return; }
+    pageStatus.textContent = "Page " + page + " Of " + pages;
+  }
+
+  function applyVisibleZebra() {
+    const rows = Array.from(tb.rows)
+      .filter(tr => !tr.classList.contains('dw-empty') && tr.style.display !== 'none');
+
+    rows.forEach((tr, i) => {
+      tr.classList.remove('dw-zebra-even', 'dw-zebra-odd');
+      tr.classList.add(i % 2 === 0 ? 'dw-zebra-odd' : 'dw-zebra-even');
+    });
+  }
+
+  function renderPage(){
+    const ordered = Array.from(tb.rows).filter(r => !r.classList.contains('dw-empty'));
+    const visible = ordered.filter(matchesFilter);
+    const total = visible.length;
+
+    ALL_ROWS.forEach(r => { r.style.display = 'none'; });
+
+    let shown = [];
+    if (total === 0){
+      if (emptyRow){
+        emptyRow.style.display = 'table-row';
+        if (emptyRow.firstElementChild) emptyRow.firstElementChild.colSpan = heads.length;
+      }
+      if (hasPager){
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+      }
+      setPageStatus(0, 0);
+      applyVisibleZebra();
+      syncMenuOptions();
+      return;
+    }
+
+    if (emptyRow) emptyRow.style.display = 'none';
+
+    if (!hasPager || pageSize === 0){
+      shown = visible;
+      shown.forEach(r => { r.style.display = 'table-row'; });
+      if (hasPager){
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+      }
+      setPageStatus(total, 1);
+    } else {
+      const pages = Math.max(1, Math.ceil(total / pageSize));
+      if (page > pages) page = pages;
+      if (page < 1) page = 1;
+
+      const start = (page - 1) * pageSize;
+      const end = start + pageSize;
+      shown = visible.slice(start, end);
+
+      shown.forEach(r => { r.style.display = 'table-row'; });
+
+      prevBtn.disabled = page <= 1;
+      nextBtn.disabled = page >= pages;
+      setPageStatus(total, pages);
+    }
+
+    applyVisibleZebra();
+    syncMenuOptions();
+  }
+
+  if(hasSearch){
+    const syncClearBtn = ()=> searchFieldWrap.classList.toggle('has-value', !!searchInput.value);
+    let t=null;
+
+    searchInput.addEventListener('input', e=>{
+      syncClearBtn();
+      clearTimeout(t);
+      t=setTimeout(()=>{
+        filter=(e.target.value||'').toLowerCase().trim();
+        page=1;
+        renderPage();
+        syncMenuOptions();
+      },120);
+    });
+
+    clearBtn.addEventListener('click', ()=>{
+      searchInput.value='';
+      syncClearBtn();
+      filter='';
+      page=1;
+      renderPage();
+      syncMenuOptions();
+      searchInput.focus();
+    });
+  }
+
+  if(hasPager){
+    sizeSel.addEventListener('change', e=>{
+      pageSize = parseInt(e.target.value,10) || 0;
+      page=1;
+      renderPage();
+    });
+    prevBtn.addEventListener('click', ()=>{ page--; renderPage(); });
+    nextBtn.addEventListener('click', ()=>{ page++; renderPage(); });
+  }
+
+  function hideMenu(){ if(menu) menu.classList.add('vi-hide'); }
+  function toggleMenu(){ if(menu) menu.classList.toggle('vi-hide'); }
+
+  document.addEventListener('click', (e)=>{
+    if(!menu || menu.classList.contains('vi-hide')) return;
+    const inMenu = menu.contains(e.target);
+    const inBtn = downloadBtn && downloadBtn.contains(e.target);
+    if(!inMenu && !inBtn) hideMenu();
+  });
+
+  if(hasEmbed && downloadBtn){
+    downloadBtn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      toggleMenu();
+    });
+  }
+
+  async function waitForFontsAndImages(el){
+    if (document.fonts && document.fonts.ready){
+      try { await document.fonts.ready; } catch(e){}
+    }
+    const imgs = Array.from(el.querySelectorAll('img'));
+    await Promise.all(imgs.map(img=>{
+      if (img.complete) return Promise.resolve();
+      return new Promise(res=>{
+        img.addEventListener('load', res, { once:true });
+        img.addEventListener('error', res, { once:true });
       });
+    }));
+  }
+
+  function getFilenameBase(clone){
+    const t = clone.querySelector('.vi-table-header .title')?.textContent || 'table';
+    return (t || 'table')
+      .trim()
+      .replace(/\s+/g,'_')
+      .replace(/[^\w\-]+/g,'')
+      .slice(0,60) || 'table';
+  }
+
+  function escapeCsvCell(value){
+    const s = (value ?? "").toString().replace(/\r?\n/g, " ").trim();
+    if (/[",\n]/.test(s)) {
+      return '"' + s.replace(/"/g, '""') + '"';
     }
+    return s;
+  }
 
-    /* ===== PNG EXPORT (unchanged) ===== */
-    async function waitForFontsAndImages(el){
-      if (document.fonts && document.fonts.ready){
-        try { await document.fonts.ready; } catch(e){}
-      }
-      const imgs = Array.from(el.querySelectorAll('img'));
-      await Promise.all(imgs.map(img=>{
-        if (img.complete) return Promise.resolve();
-        return new Promise(res=>{
-          img.addEventListener('load', res, { once:true });
-          img.addEventListener('error', res, { once:true });
-        });
-      }));
-    }
-
-    function getFilenameBase(clone){
-      const t = clone.querySelector('.vi-table-header .title')?.textContent || 'table';
-      return (t || 'table')
-        .trim()
-        .replace(/\s+/g,'_')
-        .replace(/[^\w\-]+/g,'')
-        .slice(0,60) || 'table';
-    }
-
-    function escapeCsvCell(value){
-      const s = (value ?? "").toString().replace(/\r?\n/g, " ").trim();
-      if (/[",\n]/.test(s)) {
-        return '"' + s.replace(/"/g, '""') + '"';
-      }
-      return s;
-    }
-
-    function downloadCsv(){
-      try{
-        hideMenu();
-
-        const headsText = heads.map(th => escapeCsvCell(th.innerText || th.textContent || ""));
-        const headerLine = headsText.join(",");
-
-        const ordered = PREVIEW_ROWS.slice();
-        const filteredRows = ordered.filter(matchesFilter);
-
-        const lines = [headerLine];
-
-        filteredRows.forEach(tr => {
-          const cells = Array.from(tr.cells).map(td => {
-            const txt = td.innerText || td.textContent || "";
-            return escapeCsvCell(txt);
-          });
-          lines.push(cells.join(","));
-        });
-
-        const csv = lines.join("\n");
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-
-        const base = getFilenameBase(document.querySelector("section.vi-table-embed") || document.body);
-        const filename = (base || "table").slice(0, 70) + ".csv";
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
-        setTimeout(() => URL.revokeObjectURL(url), 1500);
-      }catch(err){
-        console.error("CSV export failed:", err);
-      }
-    }
-    function downloadCurrentViewCsv(){
+  function downloadCsv(){
+    try{
       hideMenu();
-    
-      const headers = heads.map(th => escapeCsvCell(th.innerText || th.textContent || ""));
-      const lines = [headers.join(",")];
-    
-      const rows = Array.from(tb.rows).filter(r => !r.classList.contains('dw-empty'));
-      const visibleRows = rows.filter(r => matchesFilter(r) && r.style.display !== 'none');
-    
-      visibleRows.forEach(tr => {
-        const cells = Array.from(tr.cells).map(td => escapeCsvCell(td.innerText || td.textContent || ""));
+
+      const headsText = heads.map(th => escapeCsvCell(th.innerText || th.textContent || ""));
+      const headerLine = headsText.join(",");
+
+      const ordered = PREVIEW_ROWS.slice();
+      const filteredRows = ordered.filter(matchesFilter);
+
+      const lines = [headerLine];
+
+      filteredRows.forEach(tr => {
+        const cells = Array.from(tr.cells).map(td => {
+          const txt = td.getAttribute('title') || td.innerText || td.textContent || "";
+          return escapeCsvCell(txt);
+        });
         lines.push(cells.join(","));
       });
-    
+
       const csv = lines.join("\n");
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
-    
+
+      const base = getFilenameBase(document.querySelector("section.vi-table-embed") || document.body);
+      const filename = (base || "table").slice(0, 70) + ".csv";
+
       const a = document.createElement("a");
       a.href = url;
-      a.download = "current_view.csv";
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1200);
+
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }catch(err){
+      console.error("CSV export failed:", err);
+    }
+  }
+
+  function downloadCurrentViewCsv(){
+    hideMenu();
+
+    const headers = heads.map(th => escapeCsvCell(th.innerText || th.textContent || ""));
+    const lines = [headers.join(",")];
+
+    const rows = Array.from(tb.rows).filter(r => !r.classList.contains('dw-empty'));
+    const visibleRows = rows.filter(r => matchesFilter(r) && r.style.display !== 'none');
+
+    visibleRows.forEach(tr => {
+      const cells = Array.from(tr.cells).map(td => escapeCsvCell(td.getAttribute('title') || td.innerText || td.textContent || ""));
+      lines.push(cells.join(","));
+    });
+
+    const csv = lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "current_view.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1200);
+  }
+
+  function showRowsInClone(clone, mode){
+    const cloneTb = clone.querySelector('#bt-block tbody');
+    if (!cloneTb) return;
+
+    const cloneRows = Array.from(cloneTb.rows).filter(r => !r.classList.contains('dw-empty'));
+    const keep = new Set();
+
+    const liveRowsInOrder = Array.from(tb.rows).filter(r => !r.classList.contains('dw-empty'));
+    const orderedIdx = liveRowsInOrder.map(r => String(r.dataset.idx));
+
+    if (mode === 'top10'){
+      orderedIdx.slice(0, 10).forEach(id => keep.add(id));
+    } else if (mode === 'bottom10'){
+      orderedIdx.slice(-10).forEach(id => keep.add(id));
+    } else if (mode === 'current'){
+      PREVIEW_ROWS.forEach(r => {
+        if (r.style.display !== 'none') keep.add(String(r.dataset.idx));
+      });
+    } else {
+      PREVIEW_ROWS.forEach(r => keep.add(String(r.dataset.idx)));
     }
 
-    function showRowsInClone(clone, mode){
-      const cloneTb = clone.querySelector('#bt-block tbody');
-      if (!cloneTb) return;
+    cloneRows.forEach(r => {
+      const on = keep.has(String(r.dataset.idx));
+      r.style.display = on ? 'table-row' : 'none';
+      r.classList.remove('dw-zebra-odd', 'dw-zebra-even');
+    });
 
-      const cloneRows = Array.from(cloneTb.rows).filter(r => !r.classList.contains('dw-empty'));
-      const keep = new Set();
+    const vis = cloneRows.filter(r => r.style.display !== 'none');
+    vis.forEach((r, i) => {
+      r.classList.add(i % 2 === 0 ? 'dw-zebra-odd' : 'dw-zebra-even');
+    });
 
-      // ✅ Use CURRENT live DOM order (respects sorting), but never filter
-      const liveRowsInOrder = Array.from(tb.rows).filter(r => !r.classList.contains('dw-empty'));
-      const orderedIdx = liveRowsInOrder.map(r => String(r.dataset.idx));
+    const empty = cloneTb.querySelector('.dw-empty');
+    if (empty) empty.style.display = vis.length ? 'none' : 'table-row';
+  }
 
-      if (mode === 'top10'){
-        orderedIdx.slice(0, 10).forEach(id => keep.add(id));
-      } else if (mode === 'bottom10'){
-        orderedIdx.slice(-10).forEach(id => keep.add(id));
-      } else if (mode === 'current'){
-        // only what is currently visible in preview (i.e., after search filter)
-        PREVIEW_ROWS.forEach(r => {
-          if (r.style.display !== 'none') keep.add(String(r.dataset.idx));
-        });
-      } else {
-        // fallback: show all preview rows
-        PREVIEW_ROWS.forEach(r => keep.add(String(r.dataset.idx)));
-      }
+  async function captureCloneToPng(clone, stage, filename, targetWidth){
+    const cloneScroller = clone.querySelector('.dw-scroll');
 
-      // Show/hide clone rows by idx
-      cloneRows.forEach(r => {
-        const on = keep.has(String(r.dataset.idx));
-        r.style.display = on ? 'table-row' : 'none';
-        r.classList.remove('dw-zebra-odd', 'dw-zebra-even');
-      });
-
-      // Re-zebra visible rows
-      const vis = cloneRows.filter(r => r.style.display !== 'none');
-      vis.forEach((r, i) => {
-        r.classList.add(i % 2 === 0 ? 'dw-zebra-odd' : 'dw-zebra-even');
-      });
-
-      const empty = cloneTb.querySelector('.dw-empty');
-      if (empty) empty.style.display = vis.length ? 'none' : 'table-row';
+    if(cloneScroller){
+      cloneScroller.style.maxHeight = 'none';
+      cloneScroller.style.height = 'auto';
+      cloneScroller.style.overflow = 'visible';
+      cloneScroller.style.overflowX = 'visible';
+      cloneScroller.style.overflowY = 'visible';
+      cloneScroller.classList.add('no-scroll');
     }
 
-    async function captureCloneToPng(clone, stage, filename, targetWidth){
-      const cloneScroller = clone.querySelector('.dw-scroll');
-
-      if(cloneScroller){
-        cloneScroller.style.maxHeight = 'none';
-        cloneScroller.style.height = 'auto';
-        cloneScroller.style.overflow = 'visible';
-        cloneScroller.style.overflowX = 'visible';
-        cloneScroller.style.overflowY = 'visible';
-        cloneScroller.classList.add('no-scroll');
-      }
-
-      // ✅ export width = widget width (consistent, legible)
     const w = Math.max(900, Math.min(1600, Math.ceil(targetWidth || 1200)));
     clone.style.maxWidth = "none";
     clone.style.width = w + "px";
-      await new Promise(r => requestAnimationFrame(()=>requestAnimationFrame(r)));
-      await waitForFontsAndImages(clone);
 
-      const fullH = Math.ceil(Math.max(
-        clone.scrollHeight || 0,
-        clone.offsetHeight || 0,
-        clone.getBoundingClientRect().height || 0
-      ));
+    await new Promise(r => requestAnimationFrame(()=>requestAnimationFrame(r)));
+    await waitForFontsAndImages(clone);
 
-      const MAX_CAPTURE_AREA = 28_000_000;
-      const area = Math.ceil(w) * Math.ceil(fullH);
-      if(area > MAX_CAPTURE_AREA){
-        stage.remove();
-        console.warn("PNG export skipped: capture area too large.", { w, fullH, area });
-        if(window.__viMenuTitleEl){
-          window.__viMenuTitleEl.textContent = "Export too large — try Top 10 / Bottom 10";
-          setTimeout(()=>{ window.__viMenuTitleEl.textContent = "Choose action"; }, 2200);
-        }
-        return;
+    const fullH = Math.ceil(Math.max(
+      clone.scrollHeight || 0,
+      clone.offsetHeight || 0,
+      clone.getBoundingClientRect().height || 0
+    ));
+
+    const MAX_CAPTURE_AREA = 28_000_000;
+    const area = Math.ceil(w) * Math.ceil(fullH);
+    if(area > MAX_CAPTURE_AREA){
+      stage.remove();
+      console.warn("PNG export skipped: capture area too large.", { w, fullH, area });
+      if(window.__viMenuTitleEl){
+        window.__viMenuTitleEl.textContent = "Export too large — try Top 10 / Bottom 10";
+        setTimeout(()=>{ window.__viMenuTitleEl.textContent = "Choose action"; }, 2200);
       }
-
-      const scale = Math.min(3, Math.max(2, window.devicePixelRatio || 2));
-
-      const canvas = await window.html2canvas(clone, {
-        backgroundColor: '#ffffff',
-        scale,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        width: Math.ceil(w),
-        height: Math.ceil(fullH),
-        windowWidth: Math.ceil(w),
-        windowHeight: Math.ceil(fullH),
-        scrollX: 0,
-        scrollY: 0,
-      });
-
-      canvas.toBlob((blob)=>{
-        if(!blob){
-          stage.remove();
-          console.warn("PNG export failed: no blob returned.");
-          return;
-        }
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename + '.png';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(()=>URL.revokeObjectURL(url), 1500);
-        stage.remove();
-      }, 'image/png');
+      return;
     }
 
-    async function downloadDomPng(mode){
-      try{
-        hideMenu();
-        if(!window.html2canvas) return;
+    const scale = Math.min(3, Math.max(2, window.devicePixelRatio || 2));
 
-        const widget = document.querySelector('section.vi-table-embed');
-        if(!widget) return;
+    const canvas = await window.html2canvas(clone, {
+      backgroundColor: '#ffffff',
+      scale,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      width: Math.ceil(w),
+      height: Math.ceil(fullH),
+      windowWidth: Math.ceil(w),
+      windowHeight: Math.ceil(fullH),
+      scrollX: 0,
+      scrollY: 0,
+    });
 
-        const stage = document.createElement('div');
-        stage.style.position = 'fixed';
-        stage.style.left = '-100000px';
-        stage.style.top = '0';
-        stage.style.background = '#ffffff';
-        stage.style.zIndex = '-1';
+    canvas.toBlob((blob)=>{
+      if(!blob){
+        stage.remove();
+        console.warn("PNG export failed: no blob returned.");
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename + '.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1500);
+      stage.remove();
+    }, 'image/png');
+  }
 
-        const clone = widget.cloneNode(true);
-        clone.classList.add('export-mode');
-        clone.querySelectorAll('script').forEach(s => s.remove());
-        // ✅ Export-only CSS overrides (does NOT touch interactive table)
-       const exportStyle = document.createElement("style");
-        exportStyle.textContent = `
-          /* ✅ Keep export image width consistent with the on-page widget (prevents tiny-looking text)
-             and still allows header wrapping via wrapExportHeaders() */
-          .vi-table-embed.export-mode #bt-block table.dw-table{
-            table-layout: fixed !important;
-            width: 100% !important;
-            min-width: 0 !important;
-          }
-        
-         /* keep cell-level clamp rules in control */
+  async function downloadDomPng(mode){
+    try{
+      hideMenu();
+      if(!window.html2canvas) return;
+
+      const widget = document.querySelector('section.vi-table-embed');
+      if(!widget) return;
+
+      const stage = document.createElement('div');
+      stage.style.position = 'fixed';
+      stage.style.left = '-100000px';
+      stage.style.top = '0';
+      stage.style.background = '#ffffff';
+      stage.style.zIndex = '-1';
+
+      const clone = widget.cloneNode(true);
+      clone.classList.add('export-mode');
+      clone.querySelectorAll('script').forEach(s => s.remove());
+
+      const exportStyle = document.createElement("style");
+      exportStyle.textContent = `
+        .vi-table-embed.export-mode #bt-block table.dw-table{
+          table-layout: fixed !important;
+          width: 100% !important;
+          min-width: 0 !important;
+        }
+
         .vi-table-embed.export-mode #bt-block thead th,
         .vi-table-embed.export-mode #bt-block tbody td{
           vertical-align: middle !important;
         }
 
-          .vi-table-embed.export-mode{
-                      font-size: 16px !important;
-                    }
-                    .vi-table-embed.export-mode #bt-block thead th{
-                      font-size: 16px !important;
-                    }
-                    .vi-table-embed.export-mode #bt-block tbody td{
-                      font-size: 16px !important;
-                    }
-        
-          /* ✅ REMOVE SORT ARROWS IN EXPORT MODE */
-          .vi-table-embed.export-mode #bt-block thead th.sortable::after{
-            content: "" !important;
-          }
-        
-          \
-/* ✅ Header: keep <th> as table-cell in export (prevents stacked header bug) */
+        .vi-table-embed.export-mode{
+          font-size: 16px !important;
+        }
+        .vi-table-embed.export-mode #bt-block thead th{
+          font-size: 16px !important;
+        }
+        .vi-table-embed.export-mode #bt-block tbody td{
+          font-size: 16px !important;
+        }
+
+        .vi-table-embed.export-mode #bt-block thead th.sortable::after{
+          content: "" !important;
+        }
+
         .vi-table-embed.export-mode #bt-block thead th{
           white-space: normal !important;
           line-height: 1.15 !important;
           padding-top: 10px !important;
           padding-bottom: 10px !important;
-
-          /* no mid-word splitting */
           overflow-wrap: normal !important;
           word-break: normal !important;
           hyphens: none !important;
-
-          /* IMPORTANT: do not change display on <th> */
           overflow: visible !important;
           text-overflow: clip !important;
         }
 
-        /* ✅ Clamp the header LABEL, not the <th> (3 lines max) */
         .vi-table-embed.export-mode #bt-block thead th .dw-th-label{
           display: -webkit-box !important;
           -webkit-box-orient: vertical !important;
           -webkit-line-clamp: 3 !important;
           line-clamp: 3 !important;
-
           overflow: hidden !important;
           text-overflow: ellipsis !important;
-
           white-space: normal !important;
           overflow-wrap: normal !important;
           word-break: normal !important;
           hyphens: none !important;
         }
 
-
-        /* ✅ Export: force true vertical centering in header (html2canvas-safe) */
         .vi-table-embed.export-mode #bt-block thead th{
-          padding: 0 !important;              /* move padding to label for reliable centering */
+          padding: 0 !important;
           vertical-align: middle !important;
         }
         .vi-table-embed.export-mode #bt-block thead th .dw-th-label{
@@ -1480,226 +1570,180 @@ Probability </th>
           padding: 10px 14px !important;
           text-align: center !important;
           line-height: 1.15 !important;
-
-          /* override clamp props (flex can't clamp reliably) */
           -webkit-line-clamp: unset !important;
           line-clamp: unset !important;
           -webkit-box-orient: unset !important;
         }
-        
-          /* ✅ Keep SAME 3-line clamp behavior in export (match interactive table) */
+
         .vi-table-embed.export-mode #bt-block .dw-cell{
           white-space: normal !important;
-          word-break: normal !important;      /* no mid-word split */
-          overflow-wrap: normal !important;   /* wrap only at normal word boundaries */
+          word-break: normal !important;
+          overflow-wrap: normal !important;
           hyphens: none !important;
-        
           line-height: 1.35 !important;
-        
           display: -webkit-box !important;
           -webkit-box-orient: vertical !important;
           -webkit-line-clamp: 3 !important;
           line-clamp: 3 !important;
-        
           overflow: hidden !important;
           text-overflow: ellipsis !important;
         }
-        
-          /* ✅ Export should never compress the bar columns */
-          .vi-table-embed.export-mode #bt-block th.dw-bar-col,
-          .vi-table-embed.export-mode #bt-block td.dw-bar-td{
-            min-width: calc(var(--bar-fixed-w) + 70px) !important;
+
+        .vi-table-embed.export-mode #bt-block th.dw-bar-col,
+        .vi-table-embed.export-mode #bt-block td.dw-bar-td{
+          min-width: calc(var(--bar-fixed-w) + 70px) !important;
+        }
+      `;
+      clone.appendChild(exportStyle);
+
+      stage.appendChild(clone);
+      document.body.appendChild(stage);
+
+      function wrapExportHeaders(clone, maxLineLen = 15){
+        const ths = clone.querySelectorAll('#bt-block thead th');
+
+        ths.forEach(th => {
+          let label = th.querySelector('.dw-th-label');
+          if(!label){
+            label = document.createElement('span');
+            label.className = 'dw-th-label';
+            label.textContent = (th.textContent || '').trim();
+            th.textContent = '';
+            th.appendChild(label);
           }
-        `;
-        clone.appendChild(exportStyle);
 
-        stage.appendChild(clone);
-        document.body.appendChild(stage);
-        function wrapExportHeaders(clone, maxLineLen = 15){
-          const ths = clone.querySelectorAll('#bt-block thead th');
-        
-          ths.forEach(th => {
-            // Ensure we have a label span so export clamping works without breaking table layout
-            let label = th.querySelector('.dw-th-label');
-            if(!label){
-              label = document.createElement('span');
-              label.className = 'dw-th-label';
-              label.textContent = (th.textContent || '').trim();
-              th.textContent = '';
-              th.appendChild(label);
+          const raw = (label.textContent || "").trim();
+          if (!raw) return;
+          if (raw.length <= maxLineLen) return;
+
+          const txt = raw.replace(/_/g, " ");
+          const words = txt.split(/\s+/).filter(Boolean);
+          if (words.length <= 1) return;
+
+          const lines = [""];
+          for (const w of words) {
+            const cur = lines[lines.length - 1];
+            if (!cur) {
+              lines[lines.length - 1] = w;
+              continue;
             }
-        
-            const raw = (label.textContent || "").trim();
-            if (!raw) return;
-        
-            // Only wrap long headers
-            if (raw.length <= maxLineLen) return;
-        
-            const txt = raw.replace(/_/g, " ");
-            const words = txt.split(/\s+/).filter(Boolean);
-            if (words.length <= 1) return;
-        
-            // ✅ Build lines in the ORIGINAL order (no flipping)
-            const lines = [""];
-            for (const w of words) {
-              const cur = lines[lines.length - 1];
-        
-              if (!cur) {
-                lines[lines.length - 1] = w;
-                continue;
-              }
-        
-              const test = cur + " " + w;
-              if (test.length <= maxLineLen) {
-                lines[lines.length - 1] = test;
-              } else {
-                lines.push(w);
-              }
-            }
-        
-            // ✅ Optional: clamp to 3 lines max
-            if (lines.length > 3) {
-              const firstTwo = lines.slice(0, 2);
-              const rest = lines.slice(2).join(" ");
-              label.innerHTML = [...firstTwo, rest].join("<br>");
+            const test = cur + " " + w;
+            if (test.length <= maxLineLen) {
+              lines[lines.length - 1] = test;
             } else {
-              label.innerHTML = lines.join("<br>");
+              lines.push(w);
             }
-          });
-        }
-        // ✅ Call before capture (export-only)
-        wrapExportHeaders(clone, 15);
+          }
 
-        showRowsInClone(clone, mode);
-
-        const base = getFilenameBase(clone);
-        const suffix = mode === 'bottom10' ? "_bottom10" : "_top10";
-        const filename = (base + suffix).slice(0, 70);
-
-        // ✅ Choose export width: match the on-page widget width (prevents tiny illegible PNGs)
-        await new Promise(r => requestAnimationFrame(()=>requestAnimationFrame(r)));
-
-        const widgetW = Math.ceil(widget.getBoundingClientRect().width || 1200);
-        const fullTableWidth = Math.max(900, Math.min(1600, widgetW));
-
-        await captureCloneToPng(clone, stage, filename, fullTableWidth);
-
-      }catch(err){
-        console.error("PNG export failed:", err);
+          if (lines.length > 3) {
+            const firstTwo = lines.slice(0, 2);
+            const rest = lines.slice(2).join(" ");
+            label.innerHTML = [...firstTwo, rest].join("<br>");
+          } else {
+            label.innerHTML = lines.join("<br>");
+          }
+        });
       }
-    }
 
-    function getCurrentViewHtml(){
-      const clone = document.documentElement.cloneNode(true);
-    
-      const cloneTb = clone.querySelector('#bt-block tbody');
-      if (!cloneTb) return '<!doctype html>\n' + clone.outerHTML;
-    
-      const liveRows = Array.from(tb.rows).filter(r => !r.classList.contains('dw-empty'));
-      const cloneRows = Array.from(cloneTb.rows).filter(r => !r.classList.contains('dw-empty'));
-    
-      cloneRows.forEach((r, i) => {
-        const live = liveRows[i];
-        const visible = !!live && matchesFilter(live) && live.style.display !== 'none';
-        r.style.display = visible ? 'table-row' : 'none';
-      });
-    
-      const empty = cloneTb.querySelector('.dw-empty');
-      if (empty) empty.style.display = 'none';
-    
-      return '<!doctype html>\n' + clone.outerHTML;
-    }
-    
-    async function onEmbedCurrentClick(){
-      hideMenu();
-      const code = getCurrentViewHtml();
-      const ok = await copyToClipboard(code);
-      if (menuTitle){
-        menuTitle.textContent = ok ? 'Current view HTML copied!' : 'Copy failed (try again)';
-        setTimeout(() => { menuTitle.textContent = 'Choose action'; }, 1800);
-      }
-    }
-    function getFullHtml(){
-      const html = document.documentElement ? document.documentElement.outerHTML : "";
-      return "<!doctype html>\n" + html;
-    }
+      wrapExportHeaders(clone, 15);
+      showRowsInClone(clone, mode);
 
-    async function copyToClipboard(text){
-      try{
-        if(navigator.clipboard && navigator.clipboard.writeText){
-          await navigator.clipboard.writeText(text);
-          return true;
-        }
-      }catch(e){}
-      try{
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        ta.setAttribute('readonly','');
-        ta.style.position = 'fixed';
-        ta.style.left = '-9999px';
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        ta.remove();
+      const base = getFilenameBase(clone);
+      const suffix = mode === 'bottom10' ? "_bottom10" : mode === 'current' ? "_current" : "_top10";
+      const filename = (base + suffix).slice(0, 70);
+
+      await new Promise(r => requestAnimationFrame(()=>requestAnimationFrame(r)));
+
+      const widgetW = Math.ceil(widget.getBoundingClientRect().width || 1200);
+      const fullTableWidth = Math.max(900, Math.min(1600, widgetW));
+
+      await captureCloneToPng(clone, stage, filename, fullTableWidth);
+
+    }catch(err){
+      console.error("PNG export failed:", err);
+    }
+  }
+
+  function getFullHtml(){
+    const html = document.documentElement ? document.documentElement.outerHTML : "";
+    return "<!doctype html>\n" + html;
+  }
+
+  async function copyToClipboard(text){
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(text);
         return true;
-      }catch(e){
-        return false;
       }
+    }catch(e){}
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly','');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      return true;
+    }catch(e){
+      return false;
     }
+  }
 
-    function getCurrentViewHtml(){
-      const clone = document.documentElement.cloneNode(true);
-      const cloneTb = clone.querySelector('#bt-block table.dw-table tbody');
-      if(!cloneTb) return '<!doctype html>\n' + clone.outerHTML;
-    
-      const liveRows = Array.from(tb.rows).filter(r => !r.classList.contains('dw-empty'));
-      const cloneRows = Array.from(cloneTb.rows).filter(r => !r.classList.contains('dw-empty'));
-    
-      cloneRows.forEach((r, i)=>{
-        const live = liveRows[i];
-        const visible = !!live && matchesFilter(live) && live.style.display !== 'none';
-        r.style.display = visible ? 'table-row' : 'none';
-      });
-    
-      const empty = cloneTb.querySelector('.dw-empty');
-      if(empty) empty.style.display = 'none';
-    
-      return '<!doctype html>\n' + clone.outerHTML;
+  function getCurrentViewHtml(){
+    const clone = document.documentElement.cloneNode(true);
+    const cloneTb = clone.querySelector('#bt-block table.dw-table tbody');
+    if(!cloneTb) return '<!doctype html>\n' + clone.outerHTML;
+
+    const liveRows = Array.from(tb.rows).filter(r => !r.classList.contains('dw-empty'));
+    const cloneRows = Array.from(cloneTb.rows).filter(r => !r.classList.contains('dw-empty'));
+
+    cloneRows.forEach((r, i)=>{
+      const live = liveRows[i];
+      const visible = !!live && matchesFilter(live) && live.style.display !== 'none';
+      r.style.display = visible ? 'table-row' : 'none';
+    });
+
+    const empty = cloneTb.querySelector('.dw-empty');
+    if(empty) empty.style.display = 'none';
+
+    return '<!doctype html>\n' + clone.outerHTML;
+  }
+
+  async function onEmbedClick(){
+    hideMenu();
+    const code = getFullHtml();
+    const ok = await copyToClipboard(code);
+    if(menuTitle){
+      menuTitle.textContent = ok ? 'HTML copied!' : 'Copy failed (try again)';
+      setTimeout(()=>{ menuTitle.textContent = 'Choose action'; }, 1800);
     }
+  }
 
-    async function onEmbedClick(){
-      hideMenu();
-      const code = getFullHtml();
-      const ok = await copyToClipboard(code);
-      if(menuTitle){
-        menuTitle.textContent = ok ? 'HTML copied!' : 'Copy failed (try again)';
-        setTimeout(()=>{ menuTitle.textContent = 'Choose action'; }, 1800);
-      }
+  async function onEmbedCurrentClick(){
+    hideMenu();
+    const code = getCurrentViewHtml();
+    const ok = await copyToClipboard(code);
+    if (menuTitle){
+      menuTitle.textContent = ok ? 'Current view HTML copied!' : 'Copy failed (try again)';
+      setTimeout(() => { menuTitle.textContent = 'Choose action'; }, 1800);
     }
-    async function onEmbedCurrentClick(){
-      hideMenu();
-      const code = getCurrentViewHtml();
-      const ok = await copyToClipboard(code);
-    
-      if (menuTitle){
-        menuTitle.textContent = ok ? 'Current view HTML copied!' : 'Copy failed (try again)';
-        setTimeout(() => { menuTitle.textContent = 'Choose action'; }, 1800);
-      }
-    }
+  }
 
-    if(hasEmbed && btnTop10) btnTop10.addEventListener('click', ()=> downloadDomPng('top10'));
-    if(hasEmbed && btnBottom10) btnBottom10.addEventListener('click', ()=> downloadDomPng('bottom10'));
-    if(hasEmbed && btnCsv) btnCsv.addEventListener('click', downloadCsv);
-    if(hasEmbed && btnEmbed) btnEmbed.addEventListener('click', onEmbedClick);
-    if(hasEmbed && btnCsvCurrent) btnCsvCurrent.addEventListener('click', downloadCurrentViewCsv);
-    if(hasEmbed && btnImgCurrent) btnImgCurrent.addEventListener('click', ()=> downloadDomPng('current'));
-    if(hasEmbed && btnHtmlCurrent) btnHtmlCurrent.addEventListener('click', onEmbedCurrentClick);
+  if(hasEmbed && btnTop10) btnTop10.addEventListener('click', ()=> downloadDomPng('top10'));
+  if(hasEmbed && btnBottom10) btnBottom10.addEventListener('click', ()=> downloadDomPng('bottom10'));
+  if(hasEmbed && btnCsv) btnCsv.addEventListener('click', downloadCsv);
+  if(hasEmbed && btnEmbed) btnEmbed.addEventListener('click', onEmbedClick);
+  if(hasEmbed && btnCsvCurrent) btnCsvCurrent.addEventListener('click', downloadCurrentViewCsv);
+  if(hasEmbed && btnImgCurrent) btnImgCurrent.addEventListener('click', ()=> downloadDomPng('current'));
+  if(hasEmbed && btnHtmlCurrent) btnHtmlCurrent.addEventListener('click', onEmbedCurrentClick);
 
-    renderPage();
-    syncMenuOptions();
-  })();
-  </script>
-
+  renderPage();
+  syncMenuOptions();
+})();
+</script>
 </section>
 </body>
 </html>
